@@ -65,8 +65,8 @@ def main():
         "-p",
         "--port",
         type=str,
-        help="Specifies the device communications port (/dev/ttyUSB0 [default], /dev/hidraw0, test, ...)",
-        default="/dev/ttyUSB0",
+        help="Specifies the device communications port (/dev/ttyUSB0, /dev/hidraw0 [default], test, ...)",
+        default="/dev/hidraw0",
     )
     parser.add_argument(
         "--porttype",
@@ -256,7 +256,7 @@ def main():
             name = section
             protocol = config[section].get("protocol", fallback=None)
             type = config[section].get("type", fallback="mppsolar")
-            port = config[section].get("port", fallback="/dev/ttyUSB0")
+            port = config[section].get("port", fallback="/dev/hidraw0")
             baud = config[section].get("baud", fallback=2400)
             _command = config[section].get("command")
             tag = config[section].get("tag")
