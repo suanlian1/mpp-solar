@@ -14,7 +14,7 @@ COMMANDS = {
         "description": "Total Generated Energy query",
         "help": " -- Query total generated energy",
         "type": "QUERY",
-        "response": [["int", "Total generated energy", "KWh"]],
+        "response": [["int", "Total generated energy", "Wh"]],
         "test_responses": [
             b"",
         ],
@@ -70,6 +70,7 @@ COMMANDS = {
         ],
         "test_responses": [
             b"D1062232,499,2232,499,0971,0710,019,008,000,000,000,000,000,044,000,000,0520,0000,1941,0000,0,2,0,1,0,2,1,0\x09\x7b\r",
+            b"^0\x1b\xe3\r",
         ],
         "regex": "",
     },
@@ -141,14 +142,19 @@ class pi18(AbstractProtocol):
         _cmd = bytes(self._command, "utf-8")
         _type = self._command_defn["type"]
 
+        data_length = len(_cmd) + 2 + 1
+        if _type == "QUERY":
+            _prefix = f"^P{data_length:03}"
+        else:
+            _prefix = f"^S{data_length:03}"
+        _pre_cmd = bytes(_prefix, "utf-8") + _cmd
+        log.debug(f"get_full_command: _pre_cmd: {_pre_cmd}")
         # calculate the CRC
-        crc_high, crc_low = crc(_cmd)
+        crc_high, crc_low = crc(_pre_cmd)
         # combine byte_cmd, CRC , return
         # PI18 full command "^P005GS\x..\x..\r"
-        command_crc = _cmd + bytes([crc_high, crc_low, 13])
-        if _type == "QUERY":
-            _prefix = f"^P{len(command_crc):03}"
-            full_command = bytes(_prefix, "utf-8") + command_crc
+        _crc = bytes([crc_high, crc_low, 13])
+        full_command = _pre_cmd + _crc
         log.debug(f"get_full_command: full command: {full_command}")
         return full_command
 
@@ -157,8 +163,12 @@ class pi18(AbstractProtocol):
         Override the default get_responses as its different for PI18
         """
         responses = response.split(b",")
+        if responses[0] == b"^0\x1b\xe3\r":
+            # is a reject response
+            return ["NAK"]
+
         # Drop ^Dxxx from first response
-        responses[0] = responses[0][4:]
+        responses[0] = responses[0][5:]
         # Remove CRC of last response
         responses[-1] = responses[-1][:-3]
         return responses

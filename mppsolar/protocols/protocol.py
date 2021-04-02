@@ -238,7 +238,12 @@ class AbstractProtocol(metaclass=abc.ABCMeta):
                 key = resp_format[1]
                 # log.debug(f'result {result}, key {key}, resp_format {resp_format}')
                 # Process results
-                if resp_format[0] == "float":
+                if result == "NAK":
+                    msgs[f"WARNING{i}"] = [
+                        f"Command {command} was rejected",
+                        "",
+                    ]
+                elif resp_format[0] == "float":
                     if "--" in result:
                         result = 0
                     msgs[key] = [float(result), resp_format[2]]
@@ -261,7 +266,7 @@ class AbstractProtocol(metaclass=abc.ABCMeta):
                 # eg. ['flags', 'Device status', [ 'is_load_on', 'is_charging_on' ...
                 elif resp_format[0] == "flags":
                     for j, flag in enumerate(result):
-                        msgs[resp_format[2][j]] = [int(flag), "True - 1/False - 0"]
+                        msgs[resp_format[2][j]] = [int(flag), "bool"]
                 # eg. ['stat_flags', 'Warning status', ['Reserved', 'Inver...
                 elif resp_format[0] == "stat_flags":
                     output = ""
