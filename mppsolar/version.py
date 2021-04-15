@@ -1,2 +1,2 @@
-__version__ = "0.7.40"
-__version_comment__ = "recent changes: add mqtt_topic option and json_mqtt output"
+__version__ = "0.7.42"
+__version_comment__ = "recent changes: deal with non-numerical result better "
